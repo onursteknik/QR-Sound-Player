@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Barkod &ndash; Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.3.3/adapter.min.js"></script>
+  <script type="text/javascript" src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" />
+  <style>
+    #preview {
+      -webkit-transform: scaleX(1) !important;
+      transform: scaleX(1) !important;
+      width: 200%;
+      left: -50%;
+      top: -25%;
+      position: relative;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container col-xs-12">
+    <button type="button" style="margin-top:50px;" class="btn btn-primary btn-lg btn-block"
+      onclick="OpenBarcode()">Barkod Okuyucu</button>
+  </div>
+  <!-- Trigger the modal with a button -->
+
+  <!-- My Modal -->
+  <div class="modal fade col-xs-12" id="myModal" role="dialog">
+    <div class="modal-dialog">
+
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal"
+            style="margin-top: -7px!important;margin-right: -3px!important;font-size: 35px!important;">&times;</button>
+          <h4 class="modal-title">Barkod Okuyucu</h4>
+        </div>
+        <div class="modal-body">
+          <div style="overflow:hidden;" id="previewDiv">
+            <video id="preview"></video>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <!-- My Modal End -->
+  <!-- Player Modal -->
+  <div class="modal fade col-xs-12" id="playerModal" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal"
+            style="margin-top: -7px!important;margin-right: -3px!important;font-size: 35px!important;">&times;</button>
+          <h4 class="modal-title">Ses Dosyası Dinleniyor</h4>
+        </div>
+        <div class="modal-body">
+          <audio controls id="audioPlayer">
+            <source id="audioSource" src="" type="audio/mpeg">
+          </audio>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <!-- Player Modal End -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+  <script type="text/javascript">
+    let scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
+    scanner.addListener('scan', function (content) {
+      scanner.stop();
+      $("#myModal").modal("hide");
+      if (content.indexOf("http") != -1){
+        $("#audioSource").attr("src", content);
+      }
+      else{
+        $("#audioSource").attr("src", "http://"+content);
+      }
+      document.getElementById('audioPlayer').pause();
+      document.getElementById('audioPlayer').load();
+      $("#playerModal").modal();
+      document.getElementById('audioPlayer').play();
+    });
+    function OpenBarcode() {
+      var width = $(window).width();
+      var height = $(window).height();
+
+      $("#previewDiv").css("width", width - 80).css("height", height - 250);
+      Instascan.Camera.getCameras().then(function (cameras) {
+        if (cameras.length > 0) {
+          $.each(cameras, function (i, v) {
+            if (v.name.indexOf("back") != -1) { scanner.start(v); }
+          });
+        } else {
+          alert('Kamera bulunamadı.');
+        }
+      }).catch(function (e) {
+        console.error(e);
+      });
+      $("#myModal").modal();
+    }
+    $('#myModal').on('hidden.bs.modal', function () {
+      scanner.stop();
+    });
+    $('#playerModal').on('hidden.bs.modal', function () {
+      document.getElementById('audioPlayer').pause();
+    });
+  </script>
+</body>
+
+</html>
